@@ -72,20 +72,24 @@ public ResponseEntity<Page<PlantDto>> getAllPlants(
     Page<PlantDto> plants = plantService.getPlants(page, size);
     return new ResponseEntity<>(plants, HttpStatus.OK);
 }
-//    @GetMapping("/by-family/{family}")
-//    public ResponseEntity<List<PlantDto>> getPlantsByFamily(@PathVariable String family) {
-//        List<PlantDto> plants = plantService.findByFamily(family);
-//        return ResponseEntity.ok(plants);
-//    }
 
-@GetMapping("/by-family")
-public ResponseEntity<List<PlantDto>> getPlantsByFamily(@RequestParam(name = "family") String family) {
-    List<PlantDto> plants = plantService.findByFamily(family);
-    return ResponseEntity.ok(plants);
-}
+    @GetMapping("/by-family")
+    public ResponseEntity<Page<PlantDto>> getPlantsByFamily(
+            @RequestParam(name = "family") String family,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        Page<PlantDto> plants = plantService.findByFamily(family, page, size);
+        return ResponseEntity.ok(plants);
+    }
+
     @GetMapping("/search")
-    public ResponseEntity<List<PlantDto>> searchPlants(@RequestParam(name ="name") String name) {
-        List<PlantDto> plants = plantService.searchPlantsByName(name);
+    public ResponseEntity<Page<PlantDto>> searchPlants(
+            @RequestParam(name ="name") String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        Page<PlantDto> plants = plantService.searchPlantsByName(name, page, size);
         return ResponseEntity.ok(plants);
     }
 }

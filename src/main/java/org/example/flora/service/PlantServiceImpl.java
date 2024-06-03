@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,17 +56,17 @@ public class PlantServiceImpl implements PlantService {
     }
 
     @Override
-    public List<PlantDto> findByFamily(String family) {
-        return plantRepository.findByFamily(family).stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public Page<PlantDto> findByFamily(String family, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Plant> plantPage = plantRepository.findByFamily(family, pageable);
+        return plantPage.map(this::convertToDto);
     }
 
     @Override
-    public List<PlantDto> searchPlantsByName(String name) {
-        return plantRepository.findByNormalNameContainingIgnoreCase(name).stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    public Page<PlantDto> searchPlantsByName(String name, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Plant> plantPage = plantRepository.findByNormalNameContainingIgnoreCase(name, pageable);
+        return plantPage.map(this::convertToDto);
     }
 
     public PlantDto getPlantById(int id) {

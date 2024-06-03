@@ -10,10 +10,9 @@ public interface PlantService {
     void updatePlant(int id, PlantDto dto);
     void deletePlantById(int id);
     List<PlantDto> getAllPlants();
-    List<PlantDto> findByFamily(String family);
+    Page<PlantDto> findByFamily(String family, int page, int size);
+    Page<PlantDto> searchPlantsByName(String name, int page, int size);
     List<String> getAllDistinctFamilies();
-    List<PlantDto> searchPlantsByName(String name);
     Page<PlantDto> getPlants(int page, int size);
     PlantDto getPlantById(int id);
-
 }
