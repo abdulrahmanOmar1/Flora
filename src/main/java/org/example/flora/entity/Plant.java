@@ -20,8 +20,9 @@ public class Plant {
     @Column(name = "normal_name", nullable = false)
     private String normalName;
 
-    @Column(nullable = false)
-    private String family;
+    @ManyToOne
+    @JoinColumn(name = "family_id", nullable = false)
+    private Family family;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -30,7 +31,5 @@ public class Plant {
     private String description;
 
     @Column(name = "used_in")
-    private String PlantUsage;
-
-
+    private String plantUsage;
 }

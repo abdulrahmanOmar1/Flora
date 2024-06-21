@@ -1,14 +1,16 @@
 package org.example.flora.service;
 
 import org.example.flora.DTO.PlantDto;
+import org.example.flora.entity.Family;
 import org.example.flora.entity.Plant;
 import org.example.flora.exception.PlantNotFoundException;
+import org.example.flora.repo.FamilyRepository;
 import org.example.flora.repo.PlantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,9 +21,22 @@ public class PlantServiceImpl implements PlantService {
     @Autowired
     private PlantRepository plantRepository;
 
+    @Autowired
+    private FamilyRepository familyRepository;
+
     @Override
     public void createNewPlant(PlantDto plantDto) {
-        Plant plant = mapToEntity(new Plant(), plantDto);
+        Family existingFamily = familyRepository.findByName(plantDto.getFamily());
+        if (existingFamily == null) {
+            throw new IllegalArgumentException("Family not found");
+        }
+        Plant plant = new Plant();
+        plant.setScientificName(plantDto.getScientificName());
+        plant.setNormalName(plantDto.getNormalName());
+        plant.setFamily(existingFamily); // استخدم العائلة الموجودة في قاعدة البيانات
+        plant.setImageUrl(plantDto.getImageUrl());
+        plant.setDescription(plantDto.getDescription());
+        plant.setPlantUsage(plantDto.getPlantUsage());
         plantRepository.save(plant);
     }
 
@@ -29,7 +44,16 @@ public class PlantServiceImpl implements PlantService {
     public void updatePlant(int id, PlantDto dto) throws PlantNotFoundException {
         Plant plant = plantRepository.findById(id)
                 .orElseThrow(() -> new PlantNotFoundException("Plant not found with id: " + id));
-        mapToEntity(plant, dto);
+        plant.setScientificName(dto.getScientificName());
+        plant.setNormalName(dto.getNormalName());
+        Family family = familyRepository.findByName(dto.getFamily());
+        if (family == null) {
+            throw new IllegalArgumentException("Family not found");
+        }
+        plant.setFamily(family);
+        plant.setImageUrl(dto.getImageUrl());
+        plant.setDescription(dto.getDescription());
+        plant.setPlantUsage(dto.getPlantUsage());
         plantRepository.save(plant);
     }
 
@@ -44,7 +68,7 @@ public class PlantServiceImpl implements PlantService {
     @Override
     public List<PlantDto> getAllPlants() {
         return plantRepository.findAll().stream()
-                .map(this::mapToDto)
+                .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
@@ -58,7 +82,7 @@ public class PlantServiceImpl implements PlantService {
     @Override
     public Page<PlantDto> findByFamily(String family, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Plant> plantPage = plantRepository.findByFamily(family, pageable);
+        Page<Plant> plantPage = plantRepository.findByFamily_Name(family, pageable);
         return plantPage.map(this::convertToDto);
     }
 
@@ -69,47 +93,31 @@ public class PlantServiceImpl implements PlantService {
         return plantPage.map(this::convertToDto);
     }
 
+    @Override
+    public List<String> getAllDistinctFamilies() {
+        return plantRepository.findAllDistinctFamilies();
+    }
+
     public PlantDto getPlantById(int id) {
         Plant plant = plantRepository.findById(id)
                 .orElseThrow(() -> new PlantNotFoundException("Plant not found with id: " + id));
         return convertToDto(plant);
     }
 
+    @Override
+    public List<PlantDto> getAllPlantsNoPaginationn() {
+        List<Plant> plants = plantRepository.findAll();
+        return plants.stream().map(this::convertToDto).collect(Collectors.toList());    }
+
     private PlantDto convertToDto(Plant plant) {
         PlantDto plantDto = new PlantDto();
         plantDto.setId(plant.getId());
         plantDto.setScientificName(plant.getScientificName());
         plantDto.setNormalName(plant.getNormalName());
-        plantDto.setFamily(plant.getFamily());
+        plantDto.setFamily(plant.getFamily().getName());
         plantDto.setImageUrl(plant.getImageUrl());
         plantDto.setDescription(plant.getDescription());
         plantDto.setPlantUsage(plant.getPlantUsage());
         return plantDto;
-    }
-
-    @Override
-    public List<String> getAllDistinctFamilies() {
-        return plantRepository.findAllDistinctFamilies();
-    }
-
-    private Plant mapToEntity(Plant plant, PlantDto dto) {
-        plant.setScientificName(dto.getScientificName());
-        plant.setNormalName(dto.getNormalName());
-        plant.setFamily(dto.getFamily());
-        plant.setImageUrl(dto.getImageUrl());
-        plant.setDescription(dto.getDescription());
-        plant.setPlantUsage(dto.getPlantUsage());
-        return plant;
-    }
-
-    private PlantDto mapToDto(Plant plant) {
-        return new PlantDto(
-                plant.getId(),
-                plant.getScientificName(),
-                plant.getNormalName(),
-                plant.getFamily(),
-                plant.getImageUrl(),
-                plant.getDescription(),
-                plant.getPlantUsage());
     }
 }

@@ -15,4 +15,6 @@ public interface PlantService {
     List<String> getAllDistinctFamilies();
     Page<PlantDto> getPlants(int page, int size);
     PlantDto getPlantById(int id);
+    List<PlantDto> getAllPlantsNoPaginationn();
+
 }
